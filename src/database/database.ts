@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { User } from 'src/user/entities/user.entity';
 import { Favorites } from './interface';
+import { Album } from 'src/album/entities/album.entity';
+import { Track } from 'src/track/entities/track.entity';
 
 @Injectable()
 export class DataBase {
-  private readonly users: User[] = [];
-  private readonly favorites: Favorites = {
-    artists: [],
-    albums: [],
-    tracks: [],
-  };
+  public users: User[] = [];
+
+  public albums: Album[] = [];
+  public tracks: Track[] = [];
+  public favorites: Favorites = { artists: [], albums: [], tracks: [] };
 
   addUser(user: User): void {
     this.users.push(user);
