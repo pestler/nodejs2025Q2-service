@@ -1,19 +1,16 @@
 import { NestFactory } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { SwaggerModule, OpenAPIObject } from '@nestjs/swagger';
+import * as YAML from 'yamljs';
+import 'dotenv/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const config = new DocumentBuilder()
-    .setTitle('Home Library API')
-    .setDescription('API for managing a personal home library')
-    .setVersion('1.0')
-    .build();
+  const document: OpenAPIObject = YAML.load('./doc/api.yaml');
+  SwaggerModule.setup('doc', app, document);
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
-
-  await app.listen(4000);
+  await app.listen(process.env.PORT ?? 4000);
 }
+
 bootstrap();
