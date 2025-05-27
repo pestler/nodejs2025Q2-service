@@ -81,8 +81,10 @@ export class AlbumsService {
       }
     });
 
-    this.dataBase.favorites.albums = this.dataBase.favorites.albums.filter(
-      (albumId) => albumId !== id,
+    this.dataBase.favorites.albums = new Set(
+      Array.from(this.dataBase.favorites.albums).filter(
+        (albumId) => albumId !== id,
+      ),
     );
   }
 }
