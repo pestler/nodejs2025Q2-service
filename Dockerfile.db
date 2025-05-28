@@ -1,0 +1,16 @@
+FROM postgres:17.0-alpine3.20
+
+
+ENV POSTGRES_USER=admin \
+    POSTGRES_PASSWORD=strong_password_123 \
+    POSTGRES_DB=mydb
+
+
+VOLUME /var/lib/postgresql/data
+
+
+HEALTHCHECK --interval=10s --timeout=5s --retries=3 \
+    CMD pg_isready -U $POSTGRES_USER || exit 1
+
+
+CMD ["postgres", "-c", "logging_collector=on"]
