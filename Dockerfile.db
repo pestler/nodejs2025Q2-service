@@ -1,4 +1,4 @@
-FROM postgres:17.0-alpine3.20
+FROM postgres:24.1.0-alpine3.20
 
 
 ENV POSTGRES_USER=admin \
@@ -10,7 +10,10 @@ VOLUME /var/lib/postgresql/data
 
 
 HEALTHCHECK --interval=10s --timeout=5s --retries=3 \
-    CMD pg_isready -U $POSTGRES_USER || exit 1
+    CMD pg_isready -U $POSTGRES_USER -d $POSTGRES_DB || exit 1
+
+
+EXPOSE 5432
 
 
 CMD ["postgres", "-c", "logging_collector=on"]
