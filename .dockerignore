@@ -41,7 +41,7 @@ logs/
 /coverage
 /.nyc_output
 
-# IDE 
+# IDE
 /.idea
 .project
 .classpath
@@ -73,6 +73,5 @@ docker-compose.override.yml
 .dockerconfigjson
 
 .env
-.env.example
-/.husky
-/doc
+
+

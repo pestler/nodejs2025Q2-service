@@ -1,48 +1,54 @@
-networks:
-  hls-network:
-    driver: bridge
-
 services:
-  app:
-    container_name: hls-app
-    image: postgres:latest
-    ports:
-      - ${PORT}:${PORT}
-    environment:
-      - PORT=${PORT}
-      - DATABASE_URL=${DATABASE_URL}
-    volumes:
-      - ./src:/app/src
-      - ./prisma:/app/prisma
-    networks:
-      - hls-network
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: always
-
   postgres:
-    container_name: hls-postgres
-    image: postgres:latest
-    ports:
-      - ${POSTGRES_PORT}:${POSTGRES_PORT}
+    image: postgres
+    container_name: home_library_db_2025
+    env_file: .env
+    restart: always
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
-    env_file:
-      - .env
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - postgres_logs:/var/log/postgresql
     networks:
-      - hls-network
+      - app_network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: home_library_app_container_2025
+    env_file: .env
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    ports:
+      - "${PORT}:${PORT}"
+    depends_on:
+      - postgres
+    develop:
+      watch:
+      - action: sync+restart
+        path: ./src
+        target: /app/src
+        ignore:
+          - node_modules
     restart: always
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+    volumes:
+      - logs_data:/app/logs
+      - node_modules:/app/node_modules
+
+    networks:
+      - app_network
 
 volumes:
   postgres_data:
   postgres_logs:
+  logs_data:
+  node_modules:
+
+networks:
+  app_network:
+    driver: bridge
