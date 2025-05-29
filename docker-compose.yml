@@ -5,7 +5,7 @@ networks:
 services:
   app:
     container_name: hls-app
-    image: pestler/nodejs2024q3-service:app
+    image: postgres:latest
     ports:
       - ${PORT}:${PORT}
     environment:
@@ -23,7 +23,7 @@ services:
 
   postgres:
     container_name: hls-postgres
-    image: pestler/nodejs2024q3-service:postgres
+    image: postgres:latest
     ports:
       - ${POSTGRES_PORT}:${POSTGRES_PORT}
     environment:
