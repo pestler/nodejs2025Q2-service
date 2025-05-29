@@ -27,10 +27,7 @@
     "docker:start": "docker compose up --watch",
     "docker:stop": "docker compose down",
     "docker:restart": "docker compose down && docker compose up --build",
-    "docker:test": "docker exec app npm run test",
-    "docker:test-all": "docker exec app npm run test && docker exec app npm run test:cov",
-    "prisma:start": "prisma generate && prisma migrate deploy && nest start --watch",
-    "docker:scout": "docker scout cves pestler/nodejs2024q3-service:app-v2 && docker scout cves pestler/nodejs2024q3-service:postgres"
+    "prisma:start": "prisma generate && prisma migrate deploy && nest start --watch"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.2",
