@@ -1,7 +1,7 @@
 services:
   postgres:
-    image: postgres
-    container_name: home_library_db_2025
+    image: postgres:latest
+    container_name: home_library_db_container_2025
     env_file: .env
     restart: always
     environment:
@@ -17,6 +17,7 @@ services:
       - app_network
 
   app:
+    #image: pestler/nodejs2025q2-service:app
     build:
       context: .
       dockerfile: Dockerfile

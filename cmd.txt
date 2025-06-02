@@ -1,0 +1,6 @@
+npm run docker:start
+docker images
+docker tag 61193178ada9 pestler/nodejs2025q2-service-app:latest
+docker push pestler/nodejs2025q2-service-app:latest
+
+

@@ -16,4 +16,5 @@ WORKDIR /app
 
 COPY --from=builder /app ./
 
-ENTRYPOINT ["sh", "-c", "npm run prisma:start && exec npm run start"]
+ENTRYPOINT ["sh", "-c", "npm run prisma:start"]
+
