@@ -1,28 +1,24 @@
+
 FROM node:20.18.0-alpine3.19 AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install --only=production && npm cache clean --force
+RUN npm ci --omit=dev --omit=optional \
+    && npm cache clean --force \
+    && rm -rf /root/.npm /tmp/* /var/cache/apk/*
 
-
-COPY prisma ./prisma/
-COPY tsconfig*.json ./
-COPY doc ./doc/
+COPY prisma tsconfig*.json doc ./
 COPY . .
 
 RUN npm run build
 
 
 FROM node:20.18.0-alpine3.19 AS production
-
 WORKDIR /app
 
 COPY package*.json ./
+COPY --from=builder /app/node_modules /app/prisma /app/dist /app/tsconfig*.json /app/doc ./
 
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/tsconfig*.json ./
-COPY --from=builder /app/doc ./doc/
+RUN rm -rf /prisma/migrations /root/.npm /tmp/* /var/cache/apk/* 
 
 ENTRYPOINT ["sh", "-c", "npm run prisma:start"]

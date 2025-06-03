@@ -4,3 +4,5 @@ docker tag 61193178ada9 pestler/nodejs2025q2-service-app:latest
 docker push pestler/nodejs2025q2-service-app:latest
 
 
+docker compose build --no-cache
+docker compose up -d
