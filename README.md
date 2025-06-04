@@ -30,6 +30,14 @@ git clone https://github.com/pestler/nodejs2025Q2-service.git
 cd nodejs2025Q2-service
 ```
 
+## Switch to the appropriate branch:
+
+To access the database functionality, switch to the feat-add-database branch:
+
+```
+git checkout develop-part2
+```
+
 ### 🔹 Install dependencies
 
 ```bash
@@ -43,11 +51,19 @@ Create a `.env` file in the project root directory and add:
 ```env
 PORT=4000
 
-CRYPT_SALT=10
-JWT_SECRET_KEY=secret123123
-JWT_SECRET_REFRESH_KEY=secret123123
+POSTGRES_PORT=5432
+POSTGRES_USER=admin
+POSTGRES_PASSWORD=strong_password_123
+POSTGRES_DB=home_library_db_2025
+POSTGRES_HOST=postgres
+
+CRYPT_SALT=12
+JWT_SECRET_KEY=a-very-secure-secret-key-987
+JWT_SECRET_REFRESH_KEY=another-secure-key-654
 TOKEN_EXPIRE_TIME=1h
 TOKEN_REFRESH_EXPIRE_TIME=24h
+
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?schema=public
 
 ```
 
@@ -64,11 +80,11 @@ npm run start:dev
 ### 🔹 Production mode
 
 ```bash
-npm run build
-npm run start:prod
+npm run docker:start
 ```
 
 ---
+
 
 ## 📌 API Documentation
 
@@ -81,6 +97,10 @@ Here, you will find detailed API documentation with interactive testing.
 ---
 
 ## 🔹 Useful Scripts
+- `npm run docker:start` - Runs the application in development (watch) mode.
+- `npm run docker:stop` - Stops and removes the Docker containers and network created by docker compose up.
+- `npm run docker:scout` - Analyzes the specified Docker image for known vulnerabilities using Docker Scout.
+- `npm run test` - Executes unit tests using Jest.
 
 ### 🔹 Build and Formatting
 
@@ -138,21 +158,15 @@ Here, you will find detailed API documentation with interactive testing.
   npm run start:prod
   ```
 
-- **Generate Swagger documentation**
-  ```bash
-  npm run swagger:convert
-  ```
-
 ---
 
 ## 🛠 Technologies Used
 
 - **NestJS** — A modular framework for building scalable applications
 - **Swagger** — Integrated API documentation
-- **MongoDB** — A database for storing users and collections
 - **Jest** — Used for unit and integration testing
 - **ESLint & Prettier** — Ensures code quality and formatting
-
+- **Docker** - Used for containerizing the application, simplifying deployment and ensuring consistent environments.
 ---
 
 ## 📜 License

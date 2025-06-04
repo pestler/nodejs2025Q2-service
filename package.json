@@ -21,7 +21,6 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "swagger:convert": "ts-node -r tsconfig-paths/register src/swagger/swagger-converter.ts",
     "docker:build": "docker compose up --build",
     "docker:start": "docker compose up --watch",
     "docker:stop": "docker compose down",
