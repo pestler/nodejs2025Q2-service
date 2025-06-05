@@ -4,5 +4,13 @@ docker tag 61193178ada9 pestler/nodejs2025q2-service-app:latest
 docker push pestler/nodejs2025q2-service-app:latest
 
 
-docker compose build --no-cache
+
+docker compose build --no-cache --pull
 docker compose up -d
+
+
+
+docker compose down
+docker system prune -a
+docker volume prune
+

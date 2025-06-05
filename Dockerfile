@@ -1,4 +1,4 @@
-FROM node:22-alpine3.20 AS builder
+FROM node:20.18.0-alpine3.19 AS builder
 WORKDIR /app
 
 COPY package*.json ./
@@ -12,7 +12,7 @@ COPY doc ./doc/
 RUN npm run build
 
 
-FROM node:22-alpine3.20 AS production
+FROM node:20.18.0-alpine3.19 AS production
 
 WORKDIR /app
 
