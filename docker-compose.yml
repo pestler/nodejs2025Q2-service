@@ -17,7 +17,7 @@ services:
       - app_network
 
   app:
-    #image: pestler/nodejs2025q2-service:app
+    #image: pestler/nodejs2025q2-service-app:latest
     build:
       context: .
       dockerfile: Dockerfile
