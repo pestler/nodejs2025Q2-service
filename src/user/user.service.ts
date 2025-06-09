@@ -13,6 +13,13 @@ export class UserService {
     delete rest.password;
     return rest;
   }
+
+  async findByLogin(login: string): Promise<User | null> {
+    return await this.prisma.user.findUnique({
+      where: { login },
+    });
+  }
+
   create(createUserDto: CreateUserDto): Omit<User, 'password'> {
     const { login, password } = createUserDto;
 
