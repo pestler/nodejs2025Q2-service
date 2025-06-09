@@ -1,7 +1,6 @@
 import {
   ConsoleLogger,
   Injectable,
-  LoggerService,
   OnApplicationShutdown,
 } from '@nestjs/common';
 import * as fs from 'fs';
@@ -10,7 +9,7 @@ import * as path from 'path';
 @Injectable()
 export class LoggingService
   extends ConsoleLogger
-  implements LoggerService, OnApplicationShutdown
+  implements OnApplicationShutdown
 {
   private readonly logFile = path.resolve(process.cwd(), 'logs', 'app.log');
   private readonly errorLogFile = path.resolve(
@@ -18,11 +17,8 @@ export class LoggingService
     'logs',
     'error.log',
   );
-  private readonly logLevel = parseInt(process.env.LOG_LEVEL || '2', 10);
-  private readonly maxFileSize = parseInt(
-    process.env.LOG_FILE_MAX_SIZE || '1024',
-    10,
-  );
+  private readonly logLevel = Number(process.env.LOG_LEVEL) || 2;
+  private readonly maxFileSize = Number(process.env.LOG_FILE_MAX_SIZE) || 1024;
 
   constructor() {
     super();
@@ -31,52 +27,51 @@ export class LoggingService
   }
 
   private ensureLogDirectory() {
-    const logDir = path.dirname(this.logFile);
-    if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
+    fs.mkdirSync(path.dirname(this.logFile), { recursive: true });
   }
 
   private setupGlobalErrorHandlers() {
     process.on('uncaughtException', (error) =>
-      this.logError('Uncaught Exception', error),
+      this.error('Uncaught Exception', error),
     );
     process.on('unhandledRejection', (reason) =>
-      this.logError('Unhandled Rejection', reason),
+      this.error('Unhandled Rejection', reason),
     );
   }
 
-  logRequest(url: string, method: string, body: any) {
-    this.writeLog(
-      'log',
-      `Request: ${method} ${url} - Body: ${JSON.stringify(body)}`,
-    );
+  log(message: string, ...params: any[]) {
+    this.writeLog('log', message, params);
   }
 
-  logError(message: string, error: any) {
-    this.writeLog('error', `${message}: ${error.message}`, error.stack);
+  error(message: string, ...params: any[]) {
+    this.writeLog('error', message, params);
   }
 
-  logWarning(message: string) {
-    this.writeLog('warn', `Warning: ${message}`);
+  warn(message: string, ...params: any[]) {
+    this.writeLog('warn', message, params);
   }
 
-  private writeLog(level: string, message: string, ...params: any[]) {
+  verbose(message: string, ...params: any[]) {
+    this.writeLog('verbose', message, params);
+  }
+
+  private writeLog(level: string, message: string, params: any[]) {
     if (this.getLevelPriority(level) > this.logLevel) return;
 
     const logEntry = `${new Date().toISOString()} [${level.toUpperCase()}]: ${message} ${params.map((p) => JSON.stringify(p)).join(' ')}\n`;
-    const logFilePath = level === 'error' ? this.errorLogFile : this.logFile;
+    const filePath = level === 'error' ? this.errorLogFile : this.logFile;
 
-    this.rotateFileIfNeeded(logFilePath);
-    fs.appendFileSync(logFilePath, logEntry, 'utf8');
+    this.rotateFileIfNeeded(filePath);
+    fs.appendFileSync(filePath, logEntry, 'utf8');
     process.stdout.write(logEntry);
   }
-
   private rotateFileIfNeeded(filePath: string) {
     if (
-      fs.existsSync(filePath) &&
-      fs.statSync(filePath).size / 1024 > this.maxFileSize
-    ) {
-      fs.renameSync(filePath, `${filePath}.${Date.now()}`);
-    }
+      !fs.existsSync(filePath) ||
+      fs.statSync(filePath).size / 1024 < this.maxFileSize
+    )
+      return;
+    fs.renameSync(filePath, `${filePath}.${Date.now()}`);
   }
 
   private getLevelPriority(level: string): number {
@@ -84,6 +79,6 @@ export class LoggingService
   }
 
   onApplicationShutdown() {
-    this.writeLog('log', 'Application shutting down');
+    this.log('Application shutting down');
   }
 }
