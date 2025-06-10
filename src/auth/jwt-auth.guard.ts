@@ -9,7 +9,6 @@ import { Reflector } from '@nestjs/core';
 
 import 'dotenv/config';
 
-
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
