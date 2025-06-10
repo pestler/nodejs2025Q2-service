@@ -10,7 +10,7 @@ export class User {
   })
   @IsUUID()
   @IsNotEmpty()
-  readonly id: string;
+  id: string;
 
   @ApiProperty({ example: 'john_doe', description: 'User login' })
   @IsString()
@@ -32,18 +32,14 @@ export class User {
   version: number;
 
   @ApiProperty({
-    example: new Date().getTime(),
+    example: new Date(),
     description: 'Created timestamp',
   })
-  readonly createdAt: number;
+  createdAt: Date;
 
   @ApiProperty({
-    example: new Date().getTime(),
+    example: new Date(),
     description: 'Updated timestamp',
   })
-  readonly updatedAt: number;
-
-  constructor(user: Partial<User>) {
-    Object.assign(this, user);
-  }
+  updatedAt: Date;
 }

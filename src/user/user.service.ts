@@ -1,82 +1,86 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { v4 as uuid } from 'uuid';
-import { DataBase } from 'src/database/database';
-import { User } from './entities/user.entity';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto, UpdatePasswordDto } from './dto/user.dto';
+
+export interface User {
+  id: string;
+  login: string;
+  password: string;
+  version: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 @Injectable()
 export class UserService {
-  constructor(private readonly dataBase: DataBase) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  HidePasswordUser(user: User): Omit<User, 'password'> {
-    const rest = { ...user };
-    delete rest.password;
+  private hidePasswordUser(user: User): Omit<User, 'password'> {
+    const { ...rest } = user;
     return rest;
   }
 
-  async findByLogin(login: string): Promise<User | null> {
-    return await this.prisma.user.findUnique({
-      where: { login },
-    });
-  }
-
-  create(createUserDto: CreateUserDto): Omit<User, 'password'> {
+  async create(createUserDto: CreateUserDto): Promise<Omit<User, 'password'>> {
     const { login, password } = createUserDto;
 
-    const userInfo = {
-      id: uuid(),
-      version: 1,
-      createdAt: new Date().getTime(),
-      updatedAt: new Date().getTime(),
-    };
-
-    const entity = new User({ login, password, ...userInfo });
-
-    this.dataBase.addUser(entity);
-
-    return this.HidePasswordUser(entity);
-  }
-  findAll(): Omit<User, 'password'>[] {
-    return this.dataBase.getUsers().map(this.HidePasswordUser);
-  }
-
-  findOne(id: string): Omit<User, 'password'> {
-    const user = this.dataBase.findUserById(id);
-    if (!user) {
-      throw new HttpException("User doesn't exist", HttpStatus.NOT_FOUND);
-    }
-    return this.HidePasswordUser(user);
-  }
-
-  update(
-    id: string,
-    updatePasswordDto: UpdatePasswordDto,
-  ): Omit<User, 'password'> {
-    const user = this.dataBase.findUserById(id);
-    if (!user) {
-      throw new HttpException("User doesn't exist", HttpStatus.NOT_FOUND);
-    }
-    if (user.password !== updatePasswordDto.oldPassword) {
-      throw new HttpException(
-        'Old password is incorrect',
-        HttpStatus.FORBIDDEN,
-      );
-    }
-
-    Object.assign(user, {
-      password: updatePasswordDto.newPassword,
-      updatedAt: new Date().getTime(),
-      version: user.version + 1,
+    const entity = await this.prisma.user.create({
+      data: {
+        login,
+        password,
+        version: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     });
 
-    return this.HidePasswordUser(user);
+    return this.hidePasswordUser(entity);
   }
 
-  remove(id: string): string {
-    if (!this.dataBase.removeUser(id)) {
-      throw new HttpException("User doesn't exist", HttpStatus.NOT_FOUND);
+  async findAll(): Promise<Omit<User, 'password'>[]> {
+    const users = await this.prisma.user.findMany();
+    return users.map(this.hidePasswordUser);
+  }
+
+  async findOne(id: string): Promise<Omit<User, 'password'>> {
+    if (!id) throw new BadRequestException('User ID is required');
+
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException(`User with ID ${id} not found`);
+
+    return this.hidePasswordUser(user);
+  }
+
+  async update(
+    id: string,
+    updatePasswordDto: UpdatePasswordDto,
+  ): Promise<Omit<User, 'password'>> {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException(`User with ID ${id} not found`);
+
+    if (user.password !== updatePasswordDto.oldPassword) {
+      throw new BadRequestException('Old password is incorrect');
     }
 
-    return `User with id=${id} deleted`;
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: {
+        password: updatePasswordDto.newPassword,
+        updatedAt: new Date(),
+        version: user.version + 1,
+      },
+    });
+
+    return this.hidePasswordUser(updatedUser);
+  }
+
+  async remove(id: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException(`User with ID ${id} not found`);
+
+    await this.prisma.user.delete({ where: { id } });
   }
 }

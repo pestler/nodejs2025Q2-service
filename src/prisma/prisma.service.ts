@@ -1,8 +1,16 @@
-import { Injectable, OnModuleDestroy, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleDestroy,
+  Logger,
+  OnModuleInit,
+} from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleDestroy {
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
@@ -17,6 +25,11 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
     this.logger.log('PrismaService initialized');
   }
 
+  async onModuleInit() {
+    this.logger.log('Connecting to Prisma...');
+    await this.$connect();
+  }
+
   async onModuleDestroy() {
     this.logger.log('Closing Prisma connection...');
     await this.$disconnect();
@@ -26,7 +39,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
     try {
       return await query();
     } catch (error) {
-      this.logger.error('Database query failed', error);
+      this.logger.error(`Database query failed: ${error.message}`, error.stack);
       return null;
     }
   }

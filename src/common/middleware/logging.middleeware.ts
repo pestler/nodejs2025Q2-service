@@ -11,7 +11,7 @@ export class LoggingMiddleware implements NestMiddleware {
     const { method, url, body } = req;
 
     res.on('finish', () => {
-      if (url.includes('/health') || url.includes('/favicon.ico')) return; // Исключаем ненужные запросы
+      if (url.includes('/health') || url.includes('/favicon.ico')) return;
 
       const duration = Date.now() - startTime;
       this.loggingService.log(url, method, body, res.statusCode, duration);

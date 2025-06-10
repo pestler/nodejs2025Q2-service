@@ -1,4 +1,4 @@
-import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule, Global } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
@@ -9,7 +9,9 @@ import { TrackModule } from './track/tracks.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { LoggingModule } from './logger/logging.module';
 import { LoggingMiddleware } from './common/middleware/logging.middleeware';
+import { PrismaService } from './prisma/prisma.service';
 
+@Global()
 @Module({
   imports: [
     UserModule,
@@ -21,7 +23,8 @@ import { LoggingMiddleware } from './common/middleware/logging.middleeware';
     LoggingModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, PrismaService],
+  exports: [PrismaService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

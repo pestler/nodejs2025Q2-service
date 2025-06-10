@@ -1,10 +1,10 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-generator client {
-  provider = "prisma-client-js"
 }
 
 model User {
@@ -13,46 +13,35 @@ model User {
   password  String   @default("") @db.VarChar(255)
   version   Int      @default(1)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
+  updatedAt DateTime @updatedAt
 }
 
 model Artist {
-  id     String  @id @default(uuid())
-  name   String
-  grammy Boolean
-
-  albums Album[]
-  tracks Track[]
-  favorites Favorites? @relation(fields: [id], references: [id])
+  id         String  @id @default(uuid())
+  name       String
+  grammy     Boolean
+  isFavorite Boolean @default(false)
+  albums     Album[]
+  tracks     Track[]
 }
 
 model Album {
-  id       String  @id @default(uuid())
-  name     String
-  year     Int
-  artistId String?
-
-  tracks Track[]
-  Artist Artist? @relation(fields: [artistId], references: [id], onDelete: Cascade)
-  favorites Favorites? @relation(fields: [id], references: [id])
+  id         String  @id @default(uuid())
+  name       String
+  year       Int
+  artistId   String?
+  isFavorite Boolean @default(false)
+  Artist     Artist? @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  tracks     Track[]
 }
 
 model Track {
-  id       String  @id @default(uuid())
-  name     String
-  duration Int
-  artistId String?
-  albumId  String?
-
-  Artist Artist? @relation(fields: [artistId], references: [id], onDelete: Cascade)
-  Album  Album?  @relation(fields: [albumId], references: [id], onDelete: Cascade)
-  favorites Favorites? @relation(fields: [id], references: [id])
+  id         String  @id @default(uuid())
+  name       String
+  duration   Int
+  artistId   String?
+  albumId    String?
+  isFavorite Boolean @default(false)
+  Album      Album?  @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  Artist     Artist? @relation(fields: [artistId], references: [id], onDelete: Cascade)
 }
-
-model Favorites {
-  id      String  @id @default(uuid())
-  artists Artist[]
-  albums  Album[]
-  tracks  Track[]
-}
-

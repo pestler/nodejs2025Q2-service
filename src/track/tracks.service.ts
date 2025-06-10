@@ -1,71 +1,57 @@
-import { DataBase } from './../database/database';
-import { HttpException, Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTrackDto, UpdateTrackDto } from './dto/track.dto';
-import { v4 as uuid, validate as isUUID } from 'uuid';
-import { StatusCodes } from 'http-status-codes';
-import { Track } from './entities/track.entity';
 
 @Injectable()
 export class TracksService {
-  constructor(private readonly dataBase: DataBase) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  create(createTrackDto: CreateTrackDto): Track {
-    const track = new Track({
-      id: uuid(),
-      ...createTrackDto,
+  async create(createTrackDto: CreateTrackDto) {
+    return await this.prisma.track.create({
+      data: {
+        name: createTrackDto.name,
+        duration: createTrackDto.duration,
+        artistId: createTrackDto.artistId ?? null,
+        albumId: createTrackDto.albumId ?? null,
+      },
     });
-    this.dataBase.tracks.push(track);
-    return track;
   }
 
-  findAll(): Track[] {
-    return this.dataBase.tracks;
+  async findAll() {
+    return await this.prisma.track.findMany();
   }
 
-  findOne(id: string): Track {
-    if (!isUUID(id)) {
-      throw new HttpException('Invalid UUID format', StatusCodes.BAD_REQUEST);
-    }
-
-    const track = this.dataBase.tracks.find((track) => track.id === id);
+  async findOne(id: string) {
+    const track = await this.prisma.track.findUnique({ where: { id } });
     if (!track) {
-      throw new HttpException("Track doesn't exist", StatusCodes.NOT_FOUND);
+      throw new NotFoundException(`Track with ID ${id} not found`);
     }
     return track;
   }
 
-  update(id: string, updateTrackDto: UpdateTrackDto): Track {
-    if (!isUUID(id)) {
-      throw new HttpException('Invalid UUID format', StatusCodes.BAD_REQUEST);
-    }
-
-    const track = this.dataBase.tracks.find((track) => track.id === id);
+  async update(id: string, updateTrackDto: UpdateTrackDto) {
+    const track = await this.prisma.track.findUnique({ where: { id } });
     if (!track) {
-      throw new HttpException("Track doesn't exist", StatusCodes.NOT_FOUND);
+      throw new NotFoundException(`Track with ID ${id} not found`);
     }
 
-    Object.assign(track, {
-      name: updateTrackDto.name ?? track.name,
-      artistId: updateTrackDto.artistId ?? track.artistId,
-      albumId: updateTrackDto.albumId ?? track.albumId,
-      duration: updateTrackDto.duration ?? track.duration,
+    return await this.prisma.track.update({
+      where: { id },
+      data: {
+        name: updateTrackDto.name ?? track.name,
+        duration: updateTrackDto.duration ?? track.duration,
+        artistId: updateTrackDto.artistId ?? track.artistId,
+        albumId: updateTrackDto.albumId ?? track.albumId,
+      },
     });
-
-    return track;
   }
 
-  remove(id: string): void {
-    if (!isUUID(id)) {
-      throw new HttpException('Invalid UUID format', StatusCodes.BAD_REQUEST);
+  async remove(id: string): Promise<void> {
+    const track = await this.prisma.track.findUnique({ where: { id } });
+    if (!track) {
+      throw new NotFoundException(`Track with ID ${id} not found`);
     }
 
-    const indexTrack = this.dataBase.tracks.findIndex(
-      (track) => track.id === id,
-    );
-    if (indexTrack === -1) {
-      throw new HttpException("Track doesn't exist", StatusCodes.NOT_FOUND);
-    }
-
-    this.dataBase.tracks.splice(indexTrack, 1);
+    await this.prisma.track.delete({ where: { id } });
   }
 }

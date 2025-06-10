@@ -5,13 +5,14 @@ import * as YAML from 'yamljs';
 import 'dotenv/config';
 import { LoggingService } from './logger/logging.service';
 import { HttpExceptionFilter } from './common/middleware/HttpExceptionFilter';
+import { Prisma } from '@prisma/client';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const loggingService = app.get(LoggingService);
   const port = Number(process.env.PORT) || 4000;
 
-  app.useLogger(loggingService); // Используем полученный LoggingService
+  app.useLogger(loggingService);
   app.useGlobalFilters(new HttpExceptionFilter(loggingService));
 
   const document: OpenAPIObject = YAML.load('./doc/api.yaml');
@@ -19,6 +20,7 @@ async function bootstrap() {
 
   await app.listen(port);
   loggingService.log(`🚀 App listening on port ${port}`);
+  console.log(Prisma);
 }
 
 bootstrap();

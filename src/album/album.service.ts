@@ -1,90 +1,68 @@
-import { DataBase } from '../database/database';
-import { HttpException, Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAlbumDto, UpdateAlbumDto } from './dto/album.dto';
-import { v4 as uuid, validate as isUUID } from 'uuid';
-import { StatusCodes } from 'http-status-codes';
-import { Album } from './entities/album.entity';
 
 @Injectable()
 export class AlbumsService {
-  constructor(private readonly dataBase: DataBase) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  create(createAlbumDto: CreateAlbumDto): Album {
+  async create(createAlbumDto: CreateAlbumDto) {
     if (!createAlbumDto.name || !createAlbumDto.year) {
-      throw new HttpException(
-        'Missing required fields',
-        StatusCodes.BAD_REQUEST,
-      );
+      throw new BadRequestException('Missing required fields');
     }
 
-    const album = new Album({
-      id: uuid(),
-      ...createAlbumDto,
+    return await this.prisma.album.create({
+      data: {
+        name: createAlbumDto.name,
+        year: createAlbumDto.year,
+        artistId: createAlbumDto.artistId ?? null,
+      },
     });
-
-    this.dataBase.albums.push(album);
-    return album;
   }
 
-  findAll(): Album[] {
-    return this.dataBase.albums;
+  async findAll() {
+    return await this.prisma.album.findMany();
   }
 
-  findOne(id: string): Album {
-    if (!isUUID(id)) {
-      throw new HttpException('Invalid UUID', StatusCodes.BAD_REQUEST);
-    }
-
-    const album = this.dataBase.albums.find((album) => album.id === id);
+  async findOne(id: string) {
+    const album = await this.prisma.album.findUnique({ where: { id } });
     if (!album) {
-      throw new HttpException("Album doesn't exist", StatusCodes.NOT_FOUND);
+      throw new NotFoundException(`Album with ID ${id} not found`);
     }
     return album;
   }
 
-  update(id: string, updateAlbumDto: UpdateAlbumDto): Album {
-    if (!isUUID(id)) {
-      throw new HttpException('Invalid UUID', StatusCodes.BAD_REQUEST);
-    }
-
-    const album = this.dataBase.albums.find((album) => album.id === id);
+  async update(id: string, updateAlbumDto: UpdateAlbumDto) {
+    const album = await this.prisma.album.findUnique({ where: { id } });
     if (!album) {
-      throw new HttpException("Album doesn't exist", StatusCodes.NOT_FOUND);
+      throw new NotFoundException(`Album with ID ${id} not found`);
     }
 
-    Object.assign(album, {
-      name: updateAlbumDto.name ?? album.name,
-      year: updateAlbumDto.year ?? album.year,
-      artistId: updateAlbumDto.artistId ?? null,
+    return await this.prisma.album.update({
+      where: { id },
+      data: {
+        name: updateAlbumDto.name ?? album.name,
+        year: updateAlbumDto.year ?? album.year,
+        artistId: updateAlbumDto.artistId ?? album.artistId,
+      },
     });
-
-    return album;
   }
 
-  remove(id: string): void {
-    if (!isUUID(id)) {
-      throw new HttpException('Invalid UUID', StatusCodes.BAD_REQUEST);
+  async remove(id: string): Promise<void> {
+    const album = await this.prisma.album.findUnique({ where: { id } });
+    if (!album) {
+      throw new NotFoundException(`Album with ID ${id} not found`);
     }
 
-    const indexAlbum = this.dataBase.albums.findIndex(
-      (album) => album.id === id,
-    );
-    if (indexAlbum === -1) {
-      throw new HttpException("Album doesn't exist", StatusCodes.NOT_FOUND);
-    }
+    await this.prisma.album.delete({ where: { id } });
 
-    this.dataBase.albums.splice(indexAlbum, 1);
-
-    this.dataBase.tracks.forEach((track) => {
-      if (track.albumId === id) {
-        track.albumId = null;
-      }
+    await this.prisma.track.updateMany({
+      where: { albumId: id },
+      data: { albumId: null },
     });
-
-    this.dataBase.favorites.albums = new Set(
-      Array.from(this.dataBase.favorites.albums).filter(
-        (albumId) => albumId !== id,
-      ),
-    );
   }
 }
