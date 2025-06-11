@@ -14,12 +14,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { CreateUserDto, UpdatePasswordDto } from './dto/user.dto';
 import { validationPipe } from 'src/pipes/validation.pipe';
-
-export interface User {
-  id: string;
-  login: string;
-  password: string;
-}
+import { User } from './entities/user.entity';
 
 @ApiTags('User')
 @Controller('user')

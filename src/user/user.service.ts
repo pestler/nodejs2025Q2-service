@@ -5,22 +5,16 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto, UpdatePasswordDto } from './dto/user.dto';
-
-export interface User {
-  id: string;
-  login: string;
-  password: string;
-  version: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { v4 as uuid } from 'uuid';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private hidePasswordUser(user: User): Omit<User, 'password'> {
-    const { ...rest } = user;
+  hidePasswordUser(user: User): Omit<User, 'password'> {
+    const rest = { ...user };
+    delete rest.password;
     return rest;
   }
 
@@ -29,17 +23,17 @@ export class UserService {
 
     const entity = await this.prisma.user.create({
       data: {
+        id: uuid(),
         login,
         password,
         version: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       },
     });
 
     return this.hidePasswordUser(entity);
   }
-
   async findAll(): Promise<Omit<User, 'password'>[]> {
     const users = await this.prisma.user.findMany();
     return users.map(this.hidePasswordUser);
@@ -69,7 +63,7 @@ export class UserService {
       where: { id },
       data: {
         password: updatePasswordDto.newPassword,
-        updatedAt: new Date(),
+        updatedAt: Date.now(),
         version: user.version + 1,
       },
     });

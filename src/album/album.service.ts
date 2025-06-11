@@ -52,17 +52,25 @@ export class AlbumsService {
     });
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string): Promise<{ message: string }> {
     const album = await this.prisma.album.findUnique({ where: { id } });
+
     if (!album) {
+      console.log(`Album ID ${id} not found!`);
       throw new NotFoundException(`Album with ID ${id} not found`);
     }
 
-    await this.prisma.album.delete({ where: { id } });
+    console.log(`Deleting album ID: ${id}`);
 
-    await this.prisma.track.updateMany({
+    const updatedTracks = await this.prisma.track.updateMany({
       where: { albumId: id },
       data: { albumId: null },
     });
+
+    console.log(`Updated ${updatedTracks.count} tracks`);
+
+    await this.prisma.album.delete({ where: { id } });
+
+    return { message: `Album with ID ${id} successfully deleted` };
   }
 }

@@ -1,0 +1,13 @@
+npx prisma migrate dev --name update_timestamp
+npx prisma migrate deploy
+npx prisma db push
+npx prisma generate
+npx prisma db pull
+#docker
+npm run docker:build
+docker-compose down && docker-compose up -d
+docker-compose down
+docker-compose up -d
+
+
+npm run start:dev

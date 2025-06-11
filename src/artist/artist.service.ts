@@ -50,22 +50,30 @@ export class ArtistsService {
     });
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string): Promise<{ message: string }> {
     const artist = await this.prisma.artist.findUnique({ where: { id } });
     if (!artist) {
       throw new NotFoundException(`Artist with ID ${id} not found`);
     }
 
+    console.log(`Deleting artist ID: ${id}`);
+
+    const updatedAlbums = await this.prisma.album.updateMany({
+      where: { artistId: id },
+      data: { artistId: null },
+    });
+
+    const updatedTracks = await this.prisma.track.updateMany({
+      where: { artistId: id },
+      data: { artistId: null },
+    });
+
+    console.log(
+      `Updated ${updatedAlbums.count} albums and ${updatedTracks.count} tracks`,
+    );
+
     await this.prisma.artist.delete({ where: { id } });
 
-    await this.prisma.album.updateMany({
-      where: { artistId: id },
-      data: { artistId: null },
-    });
-
-    await this.prisma.track.updateMany({
-      where: { artistId: id },
-      data: { artistId: null },
-    });
+    return { message: `Artist with ID ${id} successfully deleted` };
   }
 }

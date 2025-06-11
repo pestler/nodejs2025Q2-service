@@ -5,7 +5,6 @@ import * as YAML from 'yamljs';
 import 'dotenv/config';
 import { LoggingService } from './logger/logging.service';
 import { HttpExceptionFilter } from './common/middleware/HttpExceptionFilter';
-import { Prisma } from '@prisma/client';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -20,7 +19,8 @@ async function bootstrap() {
 
   await app.listen(port);
   loggingService.log(`🚀 App listening on port ${port}`);
-  console.log(Prisma);
 }
 
 bootstrap();
+
+

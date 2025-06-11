@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { validate as isUUID } from 'uuid';
@@ -14,9 +15,22 @@ export class FavoritesService {
     return {
       artists: await this.prisma.artist.findMany({
         where: { isFavorite: true },
+        select: { id: true, name: true, grammy: true },
       }),
-      albums: await this.prisma.album.findMany({ where: { isFavorite: true } }),
-      tracks: await this.prisma.track.findMany({ where: { isFavorite: true } }),
+      albums: await this.prisma.album.findMany({
+        where: { isFavorite: true },
+        select: { id: true, name: true, year: true, artistId: true },
+      }),
+      tracks: await this.prisma.track.findMany({
+        where: { isFavorite: true },
+        select: {
+          id: true,
+          name: true,
+          duration: true,
+          albumId: true,
+          artistId: true,
+        },
+      }),
     };
   }
 
@@ -41,7 +55,7 @@ export class FavoritesService {
     }
 
     if (!item) {
-      throw new NotFoundException(
+      throw new UnprocessableEntityException(
         `${entity.charAt(0).toUpperCase() + entity.slice(1)} doesn't exist`,
       );
     }

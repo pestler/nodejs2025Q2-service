@@ -35,11 +35,11 @@ export class User {
     example: new Date(),
     description: 'Created timestamp',
   })
-  createdAt: Date;
+  createdAt: bigint;
 
   @ApiProperty({
     example: new Date(),
     description: 'Updated timestamp',
   })
-  updatedAt: Date;
+  updatedAt: bigint;
 }
