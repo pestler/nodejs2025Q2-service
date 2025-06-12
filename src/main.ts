@@ -22,5 +22,3 @@ async function bootstrap() {
 }
 
 bootstrap();
-
-
