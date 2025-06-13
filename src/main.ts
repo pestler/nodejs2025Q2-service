@@ -3,8 +3,8 @@ import { AppModule } from './app.module';
 import { SwaggerModule, OpenAPIObject } from '@nestjs/swagger';
 import * as YAML from 'yamljs';
 import 'dotenv/config';
-import { LoggingService } from './logger/logging.service';
-import { HttpExceptionFilter } from './common/middleware/HttpExceptionFilter';
+import { LoggingService } from './logger/logger.service';
+import { HttpExceptionFilter } from './common/middleware/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

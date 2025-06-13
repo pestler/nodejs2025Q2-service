@@ -6,7 +6,7 @@ import {
   HttpStatus,
   Injectable,
 } from '@nestjs/common';
-import { LoggingService } from 'src/logger/logging.service';
+import { LoggingService } from 'src/logger/logger.service';
 
 @Injectable()
 @Catch()

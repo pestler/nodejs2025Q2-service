@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
   ForbiddenException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from 'prisma/prisma.service';
 import { CreateUserDto, UpdatePasswordDto } from './dto/user.dto';
 import { validate as isValidUUID } from 'uuid';
 
@@ -36,6 +36,12 @@ export class UserService {
     } catch (error) {
       throw new InternalServerErrorException('Failed to create user');
     }
+  }
+
+  async findByLogin(login: string) {
+    return await this.prisma.user.findUnique({
+      where: { login },
+    });
   }
 
   async findAll() {
