@@ -9,11 +9,13 @@ import {
   HttpCode,
   UsePipes,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { TracksService } from './tracks.service';
 import { CreateTrackDto, UpdateTrackDto } from './dto/track.dto';
 import { validationPipe } from 'src/pipes/validation.pipe';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @ApiTags('Tracks')
 @Controller('track')
@@ -22,22 +24,26 @@ export class TracksController {
   constructor(private readonly tracksService: TracksService) {}
 
   @Post()
-  create(@Body() createTrackDto: CreateTrackDto) {
+  @UseGuards(JwtAuthGuard)
+  async create(@Body() createTrackDto: CreateTrackDto) {
     return this.tracksService.create(createTrackDto);
   }
 
   @Get()
-  findAll() {
+  @UseGuards(JwtAuthGuard)
+  async findAll() {
     return this.tracksService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  @UseGuards(JwtAuthGuard)
+  async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.tracksService.findOne(id);
   }
 
   @Put(':id')
-  update(
+  @UseGuards(JwtAuthGuard)
+  async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateTrackDto: UpdateTrackDto,
   ) {
@@ -45,8 +51,9 @@ export class TracksController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(204)
-  remove(@Param('id', ParseUUIDPipe) id: string): void {
-    this.tracksService.remove(id);
+  async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    await this.tracksService.remove(id);
   }
 }

@@ -9,34 +9,41 @@ import {
   UsePipes,
   HttpCode,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
-import { validationPipe } from 'src/pipes/validation.pipe';
+import { ApiTags } from '@nestjs/swagger';
 import { AlbumsService } from './album.service';
 import { CreateAlbumDto, UpdateAlbumDto } from './dto/album.dto';
+import { validationPipe } from 'src/pipes/validation.pipe';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
+@ApiTags('Albums')
 @Controller('album')
+@UsePipes(validationPipe)
 export class AlbumsController {
   constructor(private readonly albumsService: AlbumsService) {}
 
   @Post()
-  @UsePipes(validationPipe)
-  create(@Body() createAlbumDto: CreateAlbumDto) {
+  @UseGuards(JwtAuthGuard)
+  async create(@Body() createAlbumDto: CreateAlbumDto) {
     return this.albumsService.create(createAlbumDto);
   }
 
   @Get()
-  findAll() {
+  @UseGuards(JwtAuthGuard)
+  async findAll() {
     return this.albumsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  @UseGuards(JwtAuthGuard)
+  async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.albumsService.findOne(id);
   }
 
   @Put(':id')
-  @UsePipes(validationPipe)
-  update(
+  @UseGuards(JwtAuthGuard)
+  async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateAlbumDto: UpdateAlbumDto,
   ) {
@@ -44,8 +51,9 @@ export class AlbumsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(204)
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    this.albumsService.remove(id);
+  async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    await this.albumsService.remove(id);
   }
 }

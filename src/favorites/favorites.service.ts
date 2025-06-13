@@ -1,110 +1,121 @@
-import { DataBase } from 'src/database/database';
-import { HttpException, Injectable } from '@nestjs/common';
-import { StatusCodes } from 'http-status-codes';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
+import { PrismaService } from 'prisma/prisma.service';
 import { validate as isUUID } from 'uuid';
 
 @Injectable()
 export class FavoritesService {
-  constructor(private readonly dataBase: DataBase) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
+  async findAll() {
     return {
-      artists: this.dataBase.artists.filter((artist) =>
-        this.dataBase.favorites.artists.has(artist.id),
-      ),
-      albums: this.dataBase.albums.filter((album) =>
-        this.dataBase.favorites.albums.has(album.id),
-      ),
-      tracks: this.dataBase.tracks.filter((track) =>
-        this.dataBase.favorites.tracks.has(track.id),
-      ),
+      artists: await this.prisma.artist.findMany({
+        where: { isFavorite: true },
+        select: { id: true, name: true, grammy: true },
+      }),
+      albums: await this.prisma.album.findMany({
+        where: { isFavorite: true },
+        select: { id: true, name: true, year: true, artistId: true },
+      }),
+      tracks: await this.prisma.track.findMany({
+        where: { isFavorite: true },
+        select: {
+          id: true,
+          name: true,
+          duration: true,
+          albumId: true,
+          artistId: true,
+        },
+      }),
     };
   }
 
   private validateId(id: string) {
     if (!isUUID(id)) {
-      throw new HttpException('Invalid UUID format', StatusCodes.BAD_REQUEST);
+      throw new BadRequestException('Invalid UUID format');
     }
   }
 
-  createTrack(id: string) {
+  async createFavorite(entity: 'track' | 'album' | 'artist', id: string) {
     this.validateId(id);
-    const track = this.dataBase.tracks.find((track) => track.id === id);
-    if (!track) {
-      throw new HttpException(
-        "Track doesn't exist",
-        StatusCodes.UNPROCESSABLE_ENTITY,
+
+    let item;
+    if (entity === 'track') {
+      item = await this.prisma.track.findUnique({ where: { id } });
+    } else if (entity === 'album') {
+      item = await this.prisma.album.findUnique({ where: { id } });
+    } else if (entity === 'artist') {
+      item = await this.prisma.artist.findUnique({ where: { id } });
+    } else {
+      throw new BadRequestException('Invalid entity type');
+    }
+
+    if (!item) {
+      throw new UnprocessableEntityException(
+        `${entity.charAt(0).toUpperCase() + entity.slice(1)} doesn't exist`,
       );
     }
-    this.dataBase.favorites.tracks.add(id);
+
+    if (entity === 'track') {
+      await this.prisma.track.update({
+        where: { id },
+        data: { isFavorite: true },
+      });
+    } else if (entity === 'album') {
+      await this.prisma.album.update({
+        where: { id },
+        data: { isFavorite: true },
+      });
+    } else if (entity === 'artist') {
+      await this.prisma.artist.update({
+        where: { id },
+        data: { isFavorite: true },
+      });
+    }
+
     return {
-      message: `Track id=${id} added to favorites`,
-      statusCode: StatusCodes.CREATED,
+      message: `${entity} id=${id} added to favorites`,
+      statusCode: 201,
     };
   }
 
-  removeTrack(id: string): void {
+  async removeFavorite(entity: 'track' | 'album' | 'artist', id: string) {
     this.validateId(id);
-    if (!this.dataBase.favorites.tracks.has(id)) {
-      throw new HttpException(
-        "Track isn't in favorites",
-        StatusCodes.NOT_FOUND,
-      );
-    }
-    this.dataBase.favorites.tracks.delete(id);
-  }
 
-  createAlbum(id: string) {
-    this.validateId(id);
-    const album = this.dataBase.albums.find((album) => album.id === id);
-    if (!album) {
-      throw new HttpException(
-        "Album doesn't exist",
-        StatusCodes.UNPROCESSABLE_ENTITY,
-      );
+    let item;
+    if (entity === 'track') {
+      item = await this.prisma.track.findUnique({ where: { id } });
+    } else if (entity === 'album') {
+      item = await this.prisma.album.findUnique({ where: { id } });
+    } else if (entity === 'artist') {
+      item = await this.prisma.artist.findUnique({ where: { id } });
+    } else {
+      throw new BadRequestException('Invalid entity type');
     }
-    this.dataBase.favorites.albums.add(id);
-    return {
-      message: `Album id=${id} added to favorites`,
-      statusCode: StatusCodes.CREATED,
-    };
-  }
 
-  removeAlbum(id: string): void {
-    this.validateId(id);
-    if (!this.dataBase.favorites.albums.has(id)) {
-      throw new HttpException(
-        "Album isn't in favorites",
-        StatusCodes.NOT_FOUND,
-      );
+    if (!item || !item.isFavorite) {
+      throw new NotFoundException(`${entity} isn't in favorites`);
     }
-    this.dataBase.favorites.albums.delete(id);
-  }
 
-  createArtist(id: string) {
-    this.validateId(id);
-    const artist = this.dataBase.artists.find((artist) => artist.id === id);
-    if (!artist) {
-      throw new HttpException(
-        "Artist doesn't exist",
-        StatusCodes.UNPROCESSABLE_ENTITY,
-      );
+    if (entity === 'track') {
+      await this.prisma.track.update({
+        where: { id },
+        data: { isFavorite: false },
+      });
+    } else if (entity === 'album') {
+      await this.prisma.album.update({
+        where: { id },
+        data: { isFavorite: false },
+      });
+    } else if (entity === 'artist') {
+      await this.prisma.artist.update({
+        where: { id },
+        data: { isFavorite: false },
+      });
     }
-    this.dataBase.favorites.artists.add(id);
-    return {
-      message: `Artist id=${id} added to favorites`,
-      statusCode: StatusCodes.CREATED,
-    };
-  }
-
-  removeArtist(id: string): void {
-    this.validateId(id);
-    if (!this.dataBase.favorites.artists.has(id)) {
-      throw new HttpException(
-        "Artist isn't in favorites",
-        StatusCodes.NOT_FOUND,
-      );
-    }
-    this.dataBase.favorites.artists.delete(id);
   }
 }

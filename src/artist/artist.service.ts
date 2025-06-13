@@ -1,91 +1,79 @@
-import { DataBase } from '../database/database';
-import { HttpException, Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { PrismaService } from 'prisma/prisma.service';
 import { CreateArtistDto, UpdateArtistDto } from './dto/artist.dto';
-import { v4 as uuid, validate as isUUID } from 'uuid';
-import { StatusCodes } from 'http-status-codes';
-import { Artist } from './entities/artist.entity';
 
 @Injectable()
 export class ArtistsService {
-  constructor(private readonly dataBase: DataBase) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  create(createArtistDto: CreateArtistDto): Artist {
+  async create(createArtistDto: CreateArtistDto) {
     if (!createArtistDto.name || createArtistDto.grammy === undefined) {
-      throw new HttpException(
-        'Missing required fields',
-        StatusCodes.BAD_REQUEST,
-      );
+      throw new BadRequestException('Missing required fields');
     }
 
-    const artist = new Artist({ id: uuid(), ...createArtistDto });
-    this.dataBase.artists.push(artist);
-    return artist;
+    return await this.prisma.artist.create({
+      data: {
+        name: createArtistDto.name,
+        grammy: createArtistDto.grammy,
+      },
+    });
   }
 
-  findAll(): Artist[] {
-    return this.dataBase.artists;
+  async findAll() {
+    return await this.prisma.artist.findMany();
   }
 
-  findOne(id: string): Artist {
-    if (!isUUID(id)) {
-      throw new HttpException('Invalid UUID', StatusCodes.BAD_REQUEST);
-    }
-
-    const artist = this.dataBase.artists.find((artist) => artist.id === id);
+  async findOne(id: string) {
+    const artist = await this.prisma.artist.findUnique({ where: { id } });
     if (!artist) {
-      throw new HttpException("Artist doesn't exist", StatusCodes.NOT_FOUND);
+      throw new NotFoundException(`Artist with ID ${id} not found`);
     }
     return artist;
   }
 
-  update(id: string, updateArtistDto: UpdateArtistDto): Artist {
-    if (!isUUID(id)) {
-      throw new HttpException('Invalid UUID', StatusCodes.BAD_REQUEST);
-    }
-
-    const artist = this.dataBase.artists.find((artist) => artist.id === id);
+  async update(id: string, updateArtistDto: UpdateArtistDto) {
+    const artist = await this.prisma.artist.findUnique({ where: { id } });
     if (!artist) {
-      throw new HttpException("Artist doesn't exist", StatusCodes.NOT_FOUND);
+      throw new NotFoundException(`Artist with ID ${id} not found`);
     }
 
-    Object.assign(artist, {
-      name: updateArtistDto.name ?? artist.name,
-      grammy: updateArtistDto.grammy ?? artist.grammy,
+    return await this.prisma.artist.update({
+      where: { id },
+      data: {
+        name: updateArtistDto.name ?? artist.name,
+        grammy: updateArtistDto.grammy ?? artist.grammy,
+      },
     });
-
-    return artist;
   }
 
-  remove(id: string): void {
-    if (!isUUID(id)) {
-      throw new HttpException('Invalid UUID', StatusCodes.BAD_REQUEST);
+  async remove(id: string): Promise<{ message: string }> {
+    const artist = await this.prisma.artist.findUnique({ where: { id } });
+    if (!artist) {
+      throw new NotFoundException(`Artist with ID ${id} not found`);
     }
 
-    const indexArtist = this.dataBase.artists.findIndex(
-      (artist) => artist.id === id,
-    );
-    if (indexArtist === -1) {
-      throw new HttpException("Artist doesn't exist", StatusCodes.NOT_FOUND);
-    }
+    console.log(`Deleting artist ID: ${id}`);
 
-    this.dataBase.artists.splice(indexArtist, 1);
-
-    this.dataBase.albums.forEach((album) => {
-      if (album.artistId === id) {
-        album.artistId = null;
-      }
+    const updatedAlbums = await this.prisma.album.updateMany({
+      where: { artistId: id },
+      data: { artistId: null },
     });
 
-    this.dataBase.tracks.forEach((track) => {
-      if (track.artistId === id) {
-        track.artistId = null;
-      }
+    const updatedTracks = await this.prisma.track.updateMany({
+      where: { artistId: id },
+      data: { artistId: null },
     });
 
-    this.dataBase.favorites.artists = new Set(
-      Array.from(this.dataBase.favorites.artists).filter(
-        (artistId) => artistId !== id,
-      ),
+    console.log(
+      `Updated ${updatedAlbums.count} albums and ${updatedTracks.count} tracks`,
     );
+
+    await this.prisma.artist.delete({ where: { id } });
+
+    return { message: `Artist with ID ${id} successfully deleted` };
   }
 }

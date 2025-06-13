@@ -1,10 +1,4 @@
-import {
-  IsBoolean,
-  IsNotEmpty,
-  IsString,
-  IsOptional,
-  IsUUID,
-} from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class Artist {
@@ -14,24 +8,18 @@ export class Artist {
   })
   @IsUUID()
   @IsNotEmpty()
-  readonly id: string;
+  id: string;
 
   @ApiProperty({ example: 'Michael Jackson', description: 'Artist name' })
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({
-    example: true,
-    description: 'Has Grammy award',
-    required: false,
-  })
+  @ApiProperty({ example: true, description: 'Has Grammy award' })
   @IsBoolean()
-  @IsOptional()
-  grammy?: boolean;
+  grammy: boolean;
 
-  constructor(artist: Partial<Artist>) {
-    Object.assign(this, artist);
-    this.grammy = artist.grammy ?? false;
-  }
+  @ApiProperty({ example: false, description: 'Is artist marked as favorite' })
+  @IsBoolean()
+  isFavorite: boolean;
 }

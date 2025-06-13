@@ -2,8 +2,8 @@ import {
   IsInt,
   IsNotEmpty,
   IsString,
-  IsOptional,
   IsUUID,
+  IsOptional,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -14,7 +14,7 @@ export class Album {
   })
   @IsUUID()
   @IsNotEmpty()
-  readonly id: string;
+  id: string;
 
   @ApiProperty({ example: 'Thriller', description: 'Album name' })
   @IsString()
@@ -24,19 +24,21 @@ export class Album {
   @ApiProperty({ example: 1982, description: 'Release year' })
   @IsInt()
   @IsNotEmpty()
-  readonly year: number;
+  year: number;
 
   @ApiProperty({
     example: 'f2e3d4c5-b6a7-8901-abcdef654321',
     description: 'Artist ID',
     required: false,
   })
-  @IsString()
   @IsUUID()
   @IsOptional()
-  artistId?: string;
+  artistId: string;
 
-  constructor(album: Partial<Album>) {
-    Object.assign(this, album);
-  }
+  @ApiProperty({
+    example: true,
+    description: 'Marks album as favorite',
+  })
+  @IsNotEmpty()
+  isFavorite: boolean;
 }
