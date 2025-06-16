@@ -32,11 +32,6 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
-  /* @Get('login/:login')
-  async findByLogin(@Param('login') login: string) {
-    return this.userService.findByLogin(login);
-  } */
-
   @Get()
   @UseGuards(JwtAuthGuard)
   async findAll(): Promise<Omit<User, 'password'>[]> {

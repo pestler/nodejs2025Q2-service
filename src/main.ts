@@ -6,6 +6,12 @@ import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import 'dotenv/config';
 import { LoggingService } from './logger/logger.service';
 import { HttpExceptionFilter } from './common/middleware/http-exception.filter';
+import * as dotenv from 'dotenv';
+import { resolve } from 'path';
+import { cwd } from 'process';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
+
+dotenv.config({ path: resolve(cwd(), '.env') });
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,6 +20,7 @@ async function bootstrap() {
 
   app.useLogger(loggingService);
   app.useGlobalFilters(new HttpExceptionFilter(loggingService));
+  app.useGlobalGuards(app.get(JwtAuthGuard));
 
   const config = new DocumentBuilder()
     .setTitle('API Documentation')

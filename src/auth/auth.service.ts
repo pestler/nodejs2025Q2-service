@@ -1,100 +1,64 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  BadRequestException,
-  ForbiddenException,
-} from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-
-import { TokenExpiredError } from 'jsonwebtoken';
-import { UserService } from 'src/user/user.service';
+import { UserService } from '../user/user.service';
+import { User } from '../user/entities/user.entity';
+import { CreateUserDto } from 'src/user/dto/user.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
+    private readonly userService: UserService,
     private readonly jwtService: JwtService,
-    private readonly usersService: UserService,
   ) {}
 
-  async signup(login: string, password: string) {
-    const existingUser = await this.usersService.findByLogin(login);
+  async validateUser(login: string, password: string): Promise<Omit<User, 'password'>> {
+    const user = await this.userService.findByLogin(login);
+    if (!user || user.password !== password) {
+      throw new UnauthorizedException('Invalid login or password');
+    }
 
+    const { password: _, ...userWithoutPassword } = user;
+    return {
+      ...userWithoutPassword,
+      createdAt: user.createdAt instanceof Date ? user.createdAt.getTime() : user.createdAt,
+      updatedAt: user.updatedAt instanceof Date ? user.updatedAt.getTime() : user.updatedAt,
+    };
+  }
+
+  async generateTokens(user: Omit<User, 'password'>) {
+    const payload = { userId: user.id, login: user.login };
+    return {
+      accessToken: this.jwtService.sign(payload),
+      refreshToken: this.jwtService.sign(payload, {
+        secret: process.env.JWT_SECRET_REFRESH_KEY,
+        expiresIn: process.env.TOKEN_REFRESH_EXPIRE_TIME,
+      }),
+    };
+  }
+
+  async login(loginDto: any) {
+    const user = await this.validateUser(loginDto.login, loginDto.password);
+    return this.generateTokens(user);
+  }
+
+  async createUser(createUserDto: CreateUserDto): Promise<Omit<User, 'password'>> {
+    const existingUser = await this.userService.findByLogin(createUserDto.login);
     if (existingUser) {
       throw new BadRequestException('User already exists');
     }
 
-    const salt = Number(process.env.CRYPT_SALT) || 10;
-    const passwordHash = await bcrypt.hash(password, salt);
-    const newUser = await this.usersService.create({
-      login,
-      password: passwordHash,
-    });
-
-    return {
-      message: 'User successfully registered',
-      userId: newUser.id,
-      id: newUser.id,
-    };
+    return this.userService.create(createUserDto);
   }
 
-  async login(login: string, password: string) {
-    const user = await this.usersService.findByLogin(login);
-
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw new UnauthorizedException('Invalid login or password');
-    }
-
-    const accessToken = this.generateAccessToken(user.id, user.login);
-    const refreshToken = this.generateRefreshToken(user.id, user.login);
-    console.log(accessToken, refreshToken, 'accessToken, refreshToken');
-    return { accessToken, refreshToken, userId: user.id };
-  }
-
-  async refreshToken(refreshToken: string) {
-    if (!refreshToken) {
-      throw new UnauthorizedException('No refresh token provided');
-    }
-
+  async refresh(refreshToken: string) {
     try {
       const payload = this.jwtService.verify(refreshToken, {
         secret: process.env.JWT_SECRET_REFRESH_KEY,
       });
 
-      const user = await this.usersService.findOneById(payload.userId);
-
-      if (!user) {
-        throw new ForbiddenException('Invalid refresh token');
-      }
-
-      const newAccessToken = this.generateAccessToken(user.id, user.login);
-      const newRefreshToken = this.generateRefreshToken(user.id, user.login);
-      return { accessToken: newAccessToken, refreshToken: newRefreshToken };
-    } catch (error) {
-      if (error instanceof TokenExpiredError) {
-        throw new ForbiddenException('Refresh token has expired');
-      }
-      throw new ForbiddenException('Invalid refresh token');
+      return this.generateTokens(payload);
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
     }
-  }
-
-  private generateAccessToken(userId: string, login: string): string {
-    return this.jwtService.sign(
-      { userId, login },
-      {
-        secret: process.env.JWT_SECRET_KEY,
-        expiresIn: process.env.TOKEN_EXPIRE_TIME,
-      },
-    );
-  }
-
-  private generateRefreshToken(userId: string, login: string): string {
-    return this.jwtService.sign(
-      { userId, login },
-      {
-        secret: process.env.JWT_SECRET_REFRESH_KEY,
-        expiresIn: process.env.TOKEN_REFRESH_EXPIRE_TIME,
-      },
-    );
   }
 }
