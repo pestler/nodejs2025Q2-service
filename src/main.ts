@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, OpenAPIObject, DocumentBuilder } from '@nestjs/swagger';
 import * as YAML from 'yamljs';
-import { writeFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import 'dotenv/config';
 import { LoggingService } from './logger/logger.service';
 import { HttpExceptionFilter } from './common/middleware/http-exception.filter';
@@ -24,6 +24,9 @@ async function bootstrap() {
 
   const document: OpenAPIObject = SwaggerModule.createDocument(app, config);
 
+  if (!existsSync('./doc')) {
+    mkdirSync('./doc');
+  }
   writeFileSync('./doc/api.yaml', YAML.stringify(document, 2));
 
   SwaggerModule.setup('doc', app, document);

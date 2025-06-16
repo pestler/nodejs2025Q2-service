@@ -9,7 +9,7 @@ import { TrackModule } from './track/tracks.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoggingModule } from './logger/logger.module';
-import { LoggingMiddleware } from './common/middleware/logger.middleeware';
+import { LoggingMiddleware } from './common/middleware/logger.middleware';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
@@ -32,7 +32,6 @@ import { UserService } from './user/user.service';
     AuthModule,
     FavoritesModule,
     LoggingModule,
-    JwtModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET_KEY,
       signOptions: { expiresIn: process.env.TOKEN_EXPIRE_TIME },
