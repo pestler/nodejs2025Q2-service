@@ -6,9 +6,9 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
-import { Request } from 'express';
 
-import { IS_PUBLIC_KEY } from 'src/common/allow-anonymous.decorator';
+import 'dotenv/config';
+import { IS_PUBLIC_KEY } from 'src/common/public.decorator';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -22,20 +22,28 @@ export class JwtAuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) return true;
-
-    const request: Request = context.switchToHttp().getRequest();
-    const authHeader = request.headers['authorization'];
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException(
-        'Authorization header is malformed or missing',
-      );
+    if (isPublic) {
+      return true;
     }
 
-    const token = authHeader.slice(7);
+    const request = context.switchToHttp().getRequest();
+    const authHeader = request.headers['authorization'];
+    if (!authHeader) {
+      throw new UnauthorizedException('Authorization header is missing');
+    }
+
+    const [bearer, token] = authHeader.split(' ');
+
+    if (bearer !== 'Bearer' || !token) {
+      throw new UnauthorizedException('Authorization header is malformed');
+    }
 
     try {
-      (request as any).user = this.jwtService.verify(token);
+      const decoded = this.jwtService.verify(token, {
+        secret: process.env.JWT_SECRET_KEY,
+      });
+
+      request.user = decoded;
       return true;
     } catch (error) {
       throw new UnauthorizedException(

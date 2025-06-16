@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ArtistsService } from './artist.service';
 import { ArtistsController } from './artist.controller';
 import { PrismaModule } from 'prisma/prisma.module';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -13,7 +13,7 @@ import { JwtModule } from '@nestjs/jwt';
     }),
   ],
   controllers: [ArtistsController],
-  providers: [ArtistsService],
+  providers: [ArtistsService, JwtService],
   exports: [ArtistsService],
 })
 export class ArtistModule {}

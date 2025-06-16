@@ -3,30 +3,26 @@ import { AuthService } from './auth.service';
 import { SignupDto } from './signup.dto';
 import { LoginDto } from './login.dto';
 import { RefreshDto } from './refresh.dto';
-import { AllowAnonymous } from '../common/allow-anonymous.decorator';
+import { Public } from '../common/public.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
-  @AllowAnonymous()
+  @Public()
   @Post('signup')
-  @HttpCode(HttpStatus.OK)
-  async signup(@Body() dto: SignupDto): Promise<{ accessToken: string }> {
-    return this.authService.signup(dto.login, dto.password);
+  async signup(@Body() dto: SignupDto) {
+    return await this.authService.signup(dto.login, dto.password);
   }
-
-  @AllowAnonymous()
+  @Public()
   @Post('login')
-  @HttpCode(HttpStatus.OK)
-  async login(@Body() dto: LoginDto): Promise<{ accessToken: string }> {
-    return this.authService.login(dto.login, dto.password);
+  async login(@Body() dto: LoginDto) {
+    return await this.authService.login(dto.login, dto.password);
   }
 
-  @AllowAnonymous()
+  @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refresh(@Body() dto: RefreshDto): Promise<{ accessToken: string }> {
-    return this.authService.refreshToken(dto.refreshToken);
+  async refresh(@Body() dto: RefreshDto) {
+    return await this.authService.refreshToken(dto.refreshToken);
   }
 }

@@ -17,7 +17,7 @@ import { CreateArtistDto, UpdateArtistDto } from './dto/artist.dto';
 import { validationPipe } from 'src/pipes/validation.pipe';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
-@ApiTags('Artists')
+@ApiTags('artist')
 @Controller('artist')
 @UsePipes(validationPipe)
 export class ArtistsController {

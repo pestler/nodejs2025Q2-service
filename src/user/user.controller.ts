@@ -18,7 +18,7 @@ import { validationPipe } from 'src/pipes/validation.pipe';
 import { User } from './entities/user.entity';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
-@ApiTags('User')
+@ApiTags('user')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -32,10 +32,10 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
-  /*  @Get('login/:login')
-   async findByLogin(@Param('login') login: string) {
-     return this.userService.findByLogin(login);
-   } */
+  /* @Get('login/:login')
+  async findByLogin(@Param('login') login: string) {
+    return this.userService.findByLogin(login);
+  } */
 
   @Get()
   @UseGuards(JwtAuthGuard)

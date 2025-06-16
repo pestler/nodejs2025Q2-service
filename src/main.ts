@@ -1,7 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { SwaggerModule, OpenAPIObject } from '@nestjs/swagger';
+import { SwaggerModule, OpenAPIObject, DocumentBuilder } from '@nestjs/swagger';
 import * as YAML from 'yamljs';
+import { writeFileSync } from 'fs';
 import 'dotenv/config';
 import { LoggingService } from './logger/logger.service';
 import { HttpExceptionFilter } from './common/middleware/http-exception.filter';
@@ -14,7 +15,17 @@ async function bootstrap() {
   app.useLogger(loggingService);
   app.useGlobalFilters(new HttpExceptionFilter(loggingService));
 
-  const document: OpenAPIObject = YAML.load('./doc/api.yaml');
+  const config = new DocumentBuilder()
+    .setTitle('API Documentation')
+    .setDescription('Auto-generated API specification')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const document: OpenAPIObject = SwaggerModule.createDocument(app, config);
+
+  writeFileSync('./doc/api.yaml', YAML.stringify(document, 2));
+
   SwaggerModule.setup('doc', app, document);
 
   await app.listen(port);

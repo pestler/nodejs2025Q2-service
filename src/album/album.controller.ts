@@ -17,7 +17,7 @@ import { CreateAlbumDto, UpdateAlbumDto } from './dto/album.dto';
 import { validationPipe } from 'src/pipes/validation.pipe';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
-@ApiTags('Albums')
+@ApiTags('album')
 @Controller('album')
 @UsePipes(validationPipe)
 export class AlbumsController {

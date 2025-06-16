@@ -17,7 +17,7 @@ import { CreateTrackDto, UpdateTrackDto } from './dto/track.dto';
 import { validationPipe } from 'src/pipes/validation.pipe';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
-@ApiTags('Tracks')
+@ApiTags('track')
 @Controller('track')
 @UsePipes(validationPipe)
 export class TracksController {

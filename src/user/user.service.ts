@@ -8,10 +8,30 @@ import {
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateUserDto, UpdatePasswordDto } from './dto/user.dto';
 import { validate as isValidUUID } from 'uuid';
+export interface User {
+  id: string;
+  login: string;
+  password: string;
+  version: number;
+  createdAt: Date | number;
+  updatedAt: Date | number;
+}
 
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async findOneById(id: string): Promise<User | null> {
+    return await this.prisma.user.findUnique({
+      where: { id },
+    });
+  }
+
+  async findByLogin(login: string): Promise<User | null> {
+    return await this.prisma.user.findUnique({
+      where: { login },
+    });
+  }
 
   async create(createUserDto: CreateUserDto) {
     try {
@@ -36,12 +56,6 @@ export class UserService {
     } catch (error) {
       throw new InternalServerErrorException('Failed to create user');
     }
-  }
-
-  async findByLogin(login: string) {
-    return await this.prisma.user.findUnique({
-      where: { login },
-    });
   }
 
   async findAll() {
