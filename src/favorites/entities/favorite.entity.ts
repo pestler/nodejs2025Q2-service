@@ -1,15 +1,30 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Album } from 'src/album/entities/album.entity';
-import { Artist } from 'src/artist/entities/artist.entity';
-import { Track } from 'src/track/entities/track.entity';
 
 export class Favorites {
-  @ApiProperty({ type: [Artist], description: 'List of favorite artists' })
-  artists: Artist[];
+  @ApiProperty({ type: () => Object, description: 'List of favorite artists' })
+  artists: {
+    id: string;
+    name: string;
+    grammy: boolean;
+    isFavorite: boolean;
+  }[];
 
-  @ApiProperty({ type: [Album], description: 'List of favorite albums' })
-  albums: Album[];
+  @ApiProperty({ type: () => Object, description: 'List of favorite albums' })
+  albums: {
+    id: string;
+    name: string;
+    year: number;
+    artistId?: string;
+    isFavorite: boolean;
+  }[];
 
-  @ApiProperty({ type: [Track], description: 'List of favorite tracks' })
-  tracks: Track[];
+  @ApiProperty({ type: () => Object, description: 'List of favorite tracks' })
+  tracks: {
+    id: string;
+    name: string;
+    duration: number;
+    artistId?: string;
+    albumId?: string;
+    isFavorite: boolean;
+  }[];
 }

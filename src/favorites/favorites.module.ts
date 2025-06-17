@@ -1,12 +1,19 @@
 import { Module } from '@nestjs/common';
 import { FavoritesService } from './favorites.service';
 import { FavoritesController } from './favorites.controller';
-import { DataBaseModule } from 'src/database/database.module';
+import { PrismaModule } from 'prisma/prisma.module';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 
 @Module({
-  imports: [DataBaseModule],
+  imports: [
+    PrismaModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET_KEY,
+      signOptions: { expiresIn: process.env.TOKEN_EXPIRE_TIME },
+    }),
+  ],
   controllers: [FavoritesController],
-  providers: [FavoritesService],
+  providers: [FavoritesService, JwtService],
   exports: [FavoritesService],
 })
 export class FavoritesModule {}

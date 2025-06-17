@@ -1,12 +1,19 @@
 import { Module } from '@nestjs/common';
 import { ArtistsService } from './artist.service';
 import { ArtistsController } from './artist.controller';
-import { DataBaseModule } from 'src/database/database.module';
+import { PrismaModule } from 'prisma/prisma.module';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 
 @Module({
-  imports: [DataBaseModule],
+  imports: [
+    PrismaModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET_KEY,
+      signOptions: { expiresIn: process.env.TOKEN_EXPIRE_TIME },
+    }),
+  ],
   controllers: [ArtistsController],
-  providers: [ArtistsService],
+  providers: [ArtistsService, JwtService],
   exports: [ArtistsService],
 })
 export class ArtistModule {}

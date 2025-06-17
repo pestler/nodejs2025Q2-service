@@ -35,7 +35,7 @@ cd nodejs2025Q2-service
 To access the database functionality, switch to the feat-add-database branch:
 
 ```
-git checkout develop-part2
+git checkout develop-part3
 ```
 
 ### 🔹 Install dependencies
@@ -58,8 +58,8 @@ POSTGRES_DB=home_library_db_2025
 POSTGRES_HOST=postgres
 
 CRYPT_SALT=12
-JWT_SECRET_KEY=a-very-secure-secret-key-987
-JWT_SECRET_REFRESH_KEY=another-secure-key-654
+JWT_SECRET_KEY=secret123123
+JWT_SECRET_REFRESH_KEY=secret123123
 TOKEN_EXPIRE_TIME=1h
 TOKEN_REFRESH_EXPIRE_TIME=24h
 

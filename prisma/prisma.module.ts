@@ -3,12 +3,7 @@ import { PrismaService } from './prisma.service';
 
 @Global()
 @Module({
-  providers: [
-    {
-      provide: PrismaService,
-      useClass: PrismaService,
-    },
-  ],
+  providers: [PrismaService],
   exports: [PrismaService],
 })
 export class PrismaModule {

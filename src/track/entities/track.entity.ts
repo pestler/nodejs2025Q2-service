@@ -2,8 +2,9 @@ import {
   IsInt,
   IsNotEmpty,
   IsString,
-  IsOptional,
   IsUUID,
+  IsOptional,
+  IsBoolean,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -14,12 +15,17 @@ export class Track {
   })
   @IsUUID()
   @IsNotEmpty()
-  readonly id: string;
+  id: string;
 
   @ApiProperty({ example: 'Bohemian Rhapsody', description: 'Track name' })
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @ApiProperty({ example: 354, description: 'Track duration in seconds' })
+  @IsInt()
+  @IsNotEmpty()
+  duration: number;
 
   @ApiProperty({
     example: 'f2e3d4c5-b6a7-8901-abcdef654321',
@@ -28,7 +34,7 @@ export class Track {
   })
   @IsUUID()
   @IsOptional()
-  artistId?: string;
+  artistId: string;
 
   @ApiProperty({
     example: 'b7c8d9e0-f1g2-3456-hijk78901234',
@@ -37,14 +43,9 @@ export class Track {
   })
   @IsUUID()
   @IsOptional()
-  albumId?: string;
+  albumId: string;
 
-  @ApiProperty({ example: 354, description: 'Track duration in seconds' })
-  @IsInt()
-  @IsNotEmpty()
-  duration: number;
-
-  constructor(track: Partial<Track>) {
-    Object.assign(this, track);
-  }
+  @ApiProperty({ example: true, description: 'Is track marked as favorite' })
+  @IsBoolean()
+  isFavorite: boolean;
 }
